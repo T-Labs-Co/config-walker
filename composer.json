@@ -1,6 +1,6 @@
 {
     "name": "t-labs-co/config-walker",
-    "description": "This is my package config-walker",
+    "description": "The helper config package for Laravel applications. That centralizes different config sources",
     "keywords": [
         "T.Labs & Co.",
         "laravel",
@@ -12,7 +12,7 @@
         {
             "name": "T.",
             "email": "hongty.huynh@gmail.com",
-            "role": "Developer"
+            "role": "Any"
         }
     ],
     "require": {
@@ -37,7 +37,10 @@
         "psr-4": {
             "TLabsCo\\ConfigWalker\\": "src/",
             "TLabsCo\\ConfigWalker\\Database\\Factories\\": "database/factories/"
-        }
+        },
+        "file": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -48,7 +51,7 @@
     "scripts": {
         "post-autoload-dump": "@composer run prepare",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse",
+        "analyse": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"

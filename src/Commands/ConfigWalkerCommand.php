@@ -8,7 +8,7 @@ class ConfigWalkerCommand extends Command
 {
     public $signature = 'config-walker';
 
-    public $description = 'My command';
+    public $description = 'Config Walker Command';
 
     public function handle(): int
     {

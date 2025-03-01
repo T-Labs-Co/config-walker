@@ -6,7 +6,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use TLabsCo\ConfigWalker\Commands\ConfigWalkerCommand;
 
-class ConfigWalkerServiceProvider extends PackageServiceProvider
+final class ConfigWalkerServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
@@ -18,8 +18,19 @@ class ConfigWalkerServiceProvider extends PackageServiceProvider
         $package
             ->name('config-walker')
             ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_config_walker_table')
             ->hasCommand(ConfigWalkerCommand::class);
+
+        // register single object for config walker
+        $this->app->scoped('config-walker', function () {
+            return new ConfigWalker;
+        });
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        parent::boot();
     }
 }
