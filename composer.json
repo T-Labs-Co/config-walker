@@ -38,7 +38,7 @@
             "TLabsCo\\ConfigWalker\\": "src/",
             "TLabsCo\\ConfigWalker\\Database\\Factories\\": "database/factories/"
         },
-        "file": [
+        "files": [
             "src/helpers.php"
         ]
     },
