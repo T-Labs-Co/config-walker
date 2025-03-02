@@ -20,6 +20,13 @@ We're PHP and Laravel whizzes, and we'd love to work with you! We can:
 - Offer team and project leadership.
 - Delivery Manager 
 
+## PHP and Laravel Version Support
+
+This package supports the following versions of PHP and Laravel:
+
+- PHP: `^8.2`
+- Laravel: `^11.0`, `^12.0`
+
 ## Installation
 
 You can install the package via composer:
