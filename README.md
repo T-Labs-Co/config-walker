@@ -1,19 +1,24 @@
-# This is my package config-walker
+# The Laravel Package config-walker
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/t-labs-co/config-walker.svg?style=flat-square)](https://packagist.org/packages/t-labs-co/config-walker)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/t-labs-co/config-walker/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/t-labs-co/config-walker/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/t-labs-co/config-walker.svg?style=flat-square)](https://packagist.org/packages/t-labs-co/config-walker)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+This package helps you grab all your data, like **database tables, enum, constants, hard code array, files or settings**, and turns it into a nice, organized hub. It's super handy for keeping things clean and avoiding copy-paste, so you can grab what you need quickly and cut down on extra coding.
 
-## Support us
+## Work with us
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/config-walker.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/config-walker)
+We're PHP and Laravel whizzes, and we'd love to work with you! We can:
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- Design the perfect fit solution for your app.
+- Make your code cleaner and faster.
+- Refactoring and Optimize performance.
+- Ensure Laravel best practices are followed.
+- Provide expert Laravel support.
+- Review code and Quality Assurance.
+- Offer team and project leadership.
+- Delivery Manager 
 
 ## Installation
 
@@ -23,37 +28,136 @@ You can install the package via composer:
 composer require t-labs-co/config-walker
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="config-walker-migrations"
-php artisan migrate
-```
-
 You can publish the config file with:
 
 ```bash
 php artisan vendor:publish --tag="config-walker-config"
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="config-walker-views"
-```
-
 ## Usage
 
+#### With Model 
+
+Using Model trait `TLabsCo\ConfigWalker\ConfigWalkable` and custom your `walkable` method
+
 ```php
-$configWalker = new TLabsCo\ConfigWalker();
-echo $configWalker->echoPhrase('Hello, TLabsCo!');
+// Your Model App\Models\Category
+class Category extends Model
+{
+    use HasFactory;
+    use ConfigWalkable;
+
+    // omit the rest 
+
+    // Export book category to config 
+    public function walkable(): array
+    {
+        return self::query()
+            ->whereStatus(CategoryStatus::Published)
+            ->whereType(CategoryType::Book)
+            ->get()
+            ->keyBy('slug')
+            ->map(function ($cat) {
+                return $cat->name;
+            })
+            ->toArray();
+    }
+
+    public function walkerKey(): string
+    {
+        return "category_" . CategoryType::Book->value;
+    }
+}
+
+// Using TLabsCo\ConfigWalker\Facades\ConfigWalker to walk your model 
+ConfigWalker::walk(Category::class);
+
+// Get the key config with Category
+ConfigWalker::get('category_book');
+
+// walk your config Category with Override key and under Tag
+ConfigWalker::walk(Category::class, 'book1', 'categories');
+
+// Combine your custom config under Tag
+ConfigWalker::walk(['fantasy' => 'Fantasy'], 'book', 'categories');
+
+// Get config instance under tag categories
+$categoriesConfig = ConfigWalker::tag('categories');
+// Get custom config key
+$categoriesConfig->get('book1');
+// Get all
+$categoriesConfig->all();
+
+```
+
+#### With Enum
+
+Using Enum trait `TLabsCo\ConfigWalker\EnumConfigWalkable` and custom your `walkable` method
+
+```php
+
+// Enum class
+enum CategoryType: string
+{
+    use EnumConfigWalkable;
+
+    case Post = 'post';
+    case Product = 'product';
+    case Book = 'book';
+    case Page = 'page';
+}
+
+// Using TLabsCo\ConfigWalker\Facades\ConfigWalker to walk your Enum with TLabsCo\ConfigWalker\EnumConfigWalkable
+
+ConfigWalker::walk(CategoryType::class);
+
+// Get data from enum CategoryType, by default the key will be dashed case from enum name and without namespace
+// For here '\App\Enums\CategoryType' to 'category_type'
+ConfigWalker::get('category_type');
+
+```
+
+#### Helper
+
+Using helper function to access config walker - like Laravel built-in `config()`  
+
+```php
+
+// Get Facade TLabsCo\ConfigWalker\Facades\ConfigWalker
+config_walker()
+
+// Get config key 
+config_walker('your-key');
+
+// Set data when input array
+config_walker(['your-key' => 'your-value']);
+
+```
+
+#### Use to access Laravel config 
+
+This package provide serveral ways to load with Laravel config
+
+```php
+// Load on fly or from your boot ServiceProvider to auto load from init
+ConfigWalker::loadDefault();
+
+// Setting in config-walker.php option
+return [
+    'loadWithAppConfig' => true
+]
+
+// Using default laravel config via ConfigWalker
+ConfigWalker::tag('default')->get('key');
+// Or 
+ConfigWalker::makeDefault()->get('key');
+
+// By default the Laravel will place under `default` group 
+// so to get key from config
+config('key')
+// equal to
+config_walker('default.key')
+
 ```
 
 ## Testing
