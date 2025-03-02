@@ -86,7 +86,7 @@ ConfigWalker::get('category_book');
 ConfigWalker::walk(Category::class, 'book1', 'categories');
 
 // Combine your custom config under Tag
-ConfigWalker::walk(['fantasy' => 'Fantasy'], 'book', 'categories');
+ConfigWalker::walk(['fantasy' => 'Fantasy'], 'book1', 'categories');
 
 // Get config instance under tag categories
 $categoriesConfig = ConfigWalker::tag('categories');
