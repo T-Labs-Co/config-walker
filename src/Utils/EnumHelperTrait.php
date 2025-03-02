@@ -22,7 +22,7 @@ trait EnumHelperTrait
 
     public static function toArray(): array
     {
-        return array_map(fn ($case) => $case['value'], self::cases());
+        return array_map(fn ($case) => $case->value, self::cases());
     }
 
     public static function toList(): string
@@ -43,7 +43,7 @@ trait EnumHelperTrait
 
     public function is(mixed $input): bool
     {
-        $case = self::fromValue($input);
+        $case = self::from($input);
 
         return $case && $case->value === $this->value;
     }

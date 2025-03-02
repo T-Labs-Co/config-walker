@@ -76,7 +76,8 @@ final class WalkerParser
     {
         $obj = $this->makeClassInstance($class);
 
-        return in_array(ConfigWalkable::class, class_uses_recursive($obj));
+        return in_array(ConfigWalkable::class, class_uses_recursive($obj))
+            || in_array(EnumConfigWalkable::class, class_uses_recursive($obj));
     }
 
     private function makeClassInstance($class): mixed

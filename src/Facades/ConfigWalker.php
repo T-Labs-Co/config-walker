@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static ConfigWalker removeTag($tag, $includeConfig = true)
  * @method static bool hasTag($tag)
  * @method static array tagList()
+ * @method static ConfigWalker loadDefault()
  *
  * @see \TLabsCo\ConfigWalker\ConfigWalker
  */

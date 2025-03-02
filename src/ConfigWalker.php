@@ -8,24 +8,6 @@ use Illuminate\Support\Arr;
 use TLabsCo\ConfigWalker\Exceptions\UndefinedWalkerTagException;
 use TLabsCo\ConfigWalker\Exceptions\UnsupportWalkerTypeException;
 
-/**
- * @method static ConfigWalker walk($walker, $key = null, $tags = null)
- * @method static array all()
- * @method static mixed get($key, $default = null)
- * @method static array getArray($keys, $default = null)
- * @method static void set($key, $value = null)
- * @method static bool has($key)
- * @method static void forget($key)
- * @method static void prepend($key, $value)
- * @method static void push($key, $value)
- * @method static mixed pull($key, $default = null)
- * @method static ConfigWalker tag($tag)
- * @method static ConfigWalker tags($tags, $flat = false)
- * @method static ConfigWalker addTag($tag)
- * @method static ConfigWalker removeTag($tag, $includeConfig = true)
- * @method static bool hasTag($tag)
- * @method static array tagList()
- */
 final class ConfigWalker implements ArrayAccess, ConfigRepository
 {
     /**
@@ -63,7 +45,7 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
     public function __construct($options = [])
     {
         $this->config = Arr::get($options, 'config', []);
-        $this->loadWithAppConfig = Arr::get($options, 'loadWithAppConfig', false);
+        $this->loadWithAppConfig = Arr::get($options, 'loadWithAppConfig', config('config-walker.loadWithAppConfig', false));
         $this->tags = collect();
         $this->parser = new WalkerParser;
         $this->reset();
