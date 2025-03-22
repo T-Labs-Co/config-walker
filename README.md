@@ -20,12 +20,22 @@ We're PHP and Laravel whizzes, and we'd love to work with you! We can:
 - Offer team and project leadership.
 - Delivery Manager 
 
+## Features
+
+- Centralize different config sources into a single hub.
+- Support for database tables, enums, constants, hard-coded arrays, files, and settings.
+- Easy integration with Laravel models and enums.
+- Customizable configuration options.
+- Helper functions for accessing and managing configurations.
+- Automatically load configurations with Laravel's config system.
+
 ## PHP and Laravel Version Support
 
 This package supports the following versions of PHP and Laravel:
 
 - PHP: `^8.2`
 - Laravel: `^11.0`, `^12.0`
+
 
 ## Installation
 
