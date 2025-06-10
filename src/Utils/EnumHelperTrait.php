@@ -22,6 +22,8 @@
 
 namespace TLabsCo\ConfigWalker\Utils;
 
+use Illuminate\Support\Str;
+
 trait EnumHelperTrait
 {
     public static function labels(): array
@@ -61,10 +63,28 @@ trait EnumHelperTrait
         return ucwords(str_replace('_', ' ', $this->name));
     }
 
-    public function is(mixed $input): bool
+    public function is(mixed $input, $safe = true): bool
     {
-        $case = self::from($input);
+        try {
+            $case = self::from($input);
 
-        return $case && $case->value === $this->value;
+            return $case && $case->value === $this->value;
+        } catch (\Exception $e) {
+            if (! $safe) {
+                throw $e;
+            }
+
+            return false;
+        }
+    }
+
+    public function toUpper()
+    {
+        return Str::upper($this->value);
+    }
+
+    public function toLower()
+    {
+        return Str::lower($this->value);
     }
 }

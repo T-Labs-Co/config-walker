@@ -1,5 +1,6 @@
 {
     "name": "t-labs-co/config-walker",
+    "version": "1.0.0",
     "description": "The helper config package for Laravel applications. That centralizes different config sources",
     "keywords": [
         "T.Labs and Co.",
