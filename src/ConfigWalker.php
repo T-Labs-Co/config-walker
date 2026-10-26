@@ -1,71 +1,38 @@
 <?php
 
-/*
- * This file is a part of package t-co-labs/config-walker
- *
- * (c) T.Labs & Co.
- * Contact for Work: T. <hongty.huynh@gmail.com>
- *
- * We're PHP and Laravel whizzes, and we'd love to work with you! We can:
- *  - Design the perfect fit solution for your app.
- *  - Make your code cleaner and faster.
- *  - Refactoring and Optimize performance.
- *  - Ensure Laravel best practices are followed.
- *  - Provide expert Laravel support.
- *  - Review code and Quality Assurance.
- *  - Offer team and project leadership.
- *  - Delivery Manager
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace TLabsCo\ConfigWalker;
 
 use ArrayAccess;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use TLabsCo\ConfigWalker\Exceptions\UndefinedWalkerTagException;
 use TLabsCo\ConfigWalker\Exceptions\UnsupportWalkerTypeException;
 
+/**
+ * @template-implements ArrayAccess<string, mixed>
+ */
 final class ConfigWalker implements ArrayAccess, ConfigRepository
 {
-    /**
-     * @var array|ArrayAccess|mixed
-     */
-    private $config;
+    /** @var array<string, mixed> */
+    private array $config;
+
+    /** @var Collection<string, string> */
+    private Collection $tags;
+
+    private bool $loadWithAppConfig;
+
+    private WalkerParser $parser;
 
     /**
-     * Group some config under tag
-     *
-     * @var \Illuminate\Support\Collection|array|mixed
+     * @param  array<string, mixed>  $options
      */
-    private $tags;
-
-    /**
-     * this will merge with laravel config as default
-     *
-     * @var bool
-     */
-    private $loadWithAppConfig;
-
-    /**
-     * @var WalkerParser
-     */
-    private $parser;
-
-    /**
-     * ConfigWalker constructor.
-     *
-     * @param  array  $options  = [
-     *                          'config' => [],
-     *                          'loadWithAppConfig' => false
-     *                          ]
-     */
-    public function __construct($options = [])
+    public function __construct(array $options = [])
     {
-        $this->config = Arr::get($options, 'config', []);
-        $this->loadWithAppConfig = Arr::get($options, 'loadWithAppConfig', config('config-walker.loadWithAppConfig', false));
+        $this->config = (array) Arr::get($options, 'config', []);
+        $this->loadWithAppConfig = (bool) Arr::get($options, 'loadWithAppConfig', config('config-walker.loadWithAppConfig', false));
         $this->tags = collect();
         $this->parser = new WalkerParser;
         $this->reset();
@@ -90,27 +57,24 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
         return $this;
     }
 
-    public function makeDefault(): ConfigWalker
+    public function makeDefault(): self
     {
-        return (new ConfigWalker(['loadWithAppConfig' => false]))->walk('default');
+        return (new self(['loadWithAppConfig' => false]))->walk('default');
     }
 
     /**
      * @param  mixed  $walker
-     * @param  string|null  $key
-     * @param  string|array|null  $tags
-     * @return $this
+     * @param  string|array<string>|null  $tags
      *
      * @throws UnsupportWalkerTypeException
      */
-    public function walk($walker, $key = null, $tags = null): self
+    public function walk($walker, ?string $key = null, $tags = null): self
     {
         try {
             $append = $this->parser->parse($walker, $key);
 
             $this->config = array_merge_recursive($this->config, $append);
 
-            // Ignore tag default
             if ($tags && $walker !== 'default') {
                 $tags = is_array($tags) ? $tags : [$tags];
                 foreach ($tags as $tag) {
@@ -119,46 +83,43 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             throw new UnsupportWalkerTypeException;
         }
 
         return $this;
     }
 
-    public function tag($tag): ConfigWalker
+    public function tag(string $tag): self
     {
-        // if no tags then return it self
         if (! $this->hasTag($tag)) {
             throw new UndefinedWalkerTagException("[ConfigWalker] Undefined tag: {$tag}");
         }
 
-        return (new ConfigWalker(['loadWithAppConfig' => false]))->walk($this->get($tag, []));
+        return (new self(['loadWithAppConfig' => false]))->walk($this->get($tag, []));
     }
 
-    public function tags($tags, $flat = false): ConfigWalker
+    /**
+     * @param  array<string>  $tags
+     */
+    public function tags(array $tags, bool $flat = false): self
     {
-        // check tags does existing
         foreach ($tags as $tag) {
             if (! $this->hasTag($tag)) {
                 throw new UndefinedWalkerTagException("[ConfigWalker] Undefined tag: {$tag}");
             }
         }
 
-        $groups = (new ConfigWalker(['loadWithAppConfig' => false]));
+        $groups = new self(['loadWithAppConfig' => false]);
 
         foreach ($tags as $tag) {
-            if (! $this->hasTag($tag)) {
-                throw new UndefinedWalkerTagException("[ConfigWalker] Undefined tag: {$tag}");
-            }
-
             $groups->walk($this->get($tag, []), $flat ? null : $tag);
         }
 
         return $groups;
     }
 
-    public function addTag($tag): self
+    public function addTag(string $tag): self
     {
         if (! $this->hasTag($tag)) {
             $this->tags->put($tag, $tag);
@@ -167,7 +128,7 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
         return $this;
     }
 
-    public function removeTag($tag, $includeConfig = true): self
+    public function removeTag(string $tag, bool $includeConfig = true): self
     {
         if ($this->hasTag($tag)) {
             if ($includeConfig) {
@@ -179,29 +140,26 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
         return $this;
     }
 
-    public function hasTag($tag): bool
+    public function hasTag(string $tag): bool
     {
         return $this->tags->has($tag);
     }
 
+    /** @return array<string, string> */
     public function tagList(): array
     {
         return $this->tags->toArray();
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function has($key): bool
+    public function has(mixed $key): bool
     {
-        return Arr::has($this->config, $key);
+        return Arr::has($this->config, (string) $key);
     }
 
     /**
-     * @param  array|string  $key
-     * @param  mixed  $default
+     * @param  array<string>|string  $key
      */
-    public function get($key, $default = null): mixed
+    public function get($key, mixed $default = null): mixed
     {
         if (is_array($key)) {
             return $this->getArray($key);
@@ -211,16 +169,16 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
     }
 
     /**
-     * @param  array  $keys
+     * @param  array<string>  $keys
+     * @return array<string, mixed>
      */
-    public function getArray($keys, $default = null): array
+    public function getArray(array $keys, mixed $default = null): array
     {
         $config = [];
 
         foreach ($keys as $key) {
-
             if (is_numeric($key)) {
-                [$key, $default] = [$default, null];
+                [$key, $default] = [(string) $default, null];
             }
 
             $config[$key] = Arr::get($this->config, $key, $default);
@@ -229,53 +187,34 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
         return $config;
     }
 
-    /**
-     * @param  array|string  $key
-     * @return void
-     */
-    public function prepend($key, $value)
+    public function prepend(mixed $key, mixed $value): void
     {
-        $array = $this->get($key, []);
-
+        $array = $this->get((string) $key, []);
         array_unshift($array, $value);
-
-        $this->set($key, $array);
+        $this->set((string) $key, $array);
     }
 
-    /**
-     * @param  array|string  $key
-     * @return void
-     */
-    public function push($key, $value)
+    public function push(mixed $key, mixed $value): void
     {
-        $array = $this->get($key, []);
-
+        $array = $this->get((string) $key, []);
         $array[] = $value;
-
-        $this->set($key, $array);
+        $this->set((string) $key, $array);
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function pull($key, $default = null): mixed
+    public function pull(string $key, mixed $default = null): mixed
     {
         return Arr::pull($this->config, $key, $default);
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function forget($key): void
+    public function forget(string $key): void
     {
         Arr::forget($this->config, $key);
     }
 
     /**
-     * @param  array|string  $key
-     * @param  mixed  $value
+     * @param  array<string, mixed>|string  $key
      */
-    public function set($key, $value = null): void
+    public function set($key, mixed $value = null): void
     {
         $keys = is_array($key) ? $key : [$key => $value];
 
@@ -289,36 +228,23 @@ final class ConfigWalker implements ArrayAccess, ConfigRepository
         return $this->config;
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function offsetExists($key): bool
+    public function offsetExists(mixed $key): bool
     {
-        return $this->has($key);
+        return $this->has((string) $key);
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function offsetGet($key): mixed
+    public function offsetGet(mixed $key): mixed
     {
-        return $this->get($key);
+        return $this->get((string) $key);
     }
 
-    /**
-     * @param  string  $key
-     * @param  mixed  $value
-     */
-    public function offsetSet($key, $value): void
+    public function offsetSet(mixed $key, mixed $value): void
     {
-        $this->set($key, $value);
+        $this->set((string) $key, $value);
     }
 
-    /**
-     * @param  string  $key
-     */
-    public function offsetUnset($key): void
+    public function offsetUnset(mixed $key): void
     {
-        $this->set($key, null);
+        $this->forget((string) $key);
     }
 }

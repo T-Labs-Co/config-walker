@@ -1,18 +1,7 @@
 includes:
-    - phpstan-baseline.neon
+    - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 5
     paths:
         - src
-        - config
-        - database
-    tmpDir: build/phpstan
-    checkOctaneCompatibility: true
-    checkModelProperties: true
-    ignoreErrors:
-        - '#Trait [a-zA-Z0-9\\_]+ConfigWalkable is used zero times and is not analysed#'
-        - '#Trait [a-zA-Z0-9\\_]+EnumHelperTrait is used zero times and is not analysed.#'
-    parallel:
-        processTimeout: 300.0
-        maximumNumberOfProcesses: 1
+    level: 8

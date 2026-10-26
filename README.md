@@ -1,51 +1,50 @@
-# The Laravel Package config-walker
+# config-walker
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/t-labs-co/config-walker.svg?style=flat-square)](https://packagist.org/packages/t-labs-co/config-walker)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/t-labs-co/config-walker/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/t-labs-co/config-walker/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Tests](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/t-labs-co/config-walker/actions/workflows/tests.yml)
+[![Static Analysis](https://img.shields.io/github/actions/workflow/status/t-labs-co/config-walker/static-analysis.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/t-labs-co/config-walker/actions/workflows/static-analysis.yml)
+[![PHPStan Level](https://img.shields.io/badge/PHPStan-Level%208-blue.svg?style=flat-square)](https://phpstan.org/)
 [![Total Downloads](https://img.shields.io/packagist/dt/t-labs-co/config-walker.svg?style=flat-square)](https://packagist.org/packages/t-labs-co/config-walker)
 
-This package helps you grab all your data, like **database tables, enum, constants, hard code array, files or settings**, and turns it into a nice, organized hub. It's super handy for keeping things clean and avoiding copy-paste, so you can grab what you need quickly and cut down on extra coding.
+A centralized configuration walker for Laravel — merge multiple config sources, tag-based scoping, and enum-aware config resolution.
 
-## Work with us
-
-We're PHP and Laravel whizzes, and we'd love to work with you! We can:
-
-- Design the perfect fit solution for your app.
-- Make your code cleaner and faster.
-- Refactoring and Optimize performance.
-- Ensure Laravel best practices are followed.
-- Provide expert Laravel support.
-- Review code and Quality Assurance.
-- Offer team and project leadership.
-- Delivery Manager 
+Centralize data from **database tables, enums, constants, arrays, and settings** into a single organized hub. Avoid copy-paste and keep your config clean.
 
 ## Features
 
-- Centralize different config sources into a single hub.
-- Support for database tables, enums, constants, hard-coded arrays, files, and settings.
-- Easy integration with Laravel models and enums.
-- Customizable configuration options.
-- Helper functions for accessing and managing configurations.
-- Automatically load configurations with Laravel's config system.
+- Centralize different config sources into a single hub
+- Support for database tables, enums, constants, hard-coded arrays, and settings
+- Tag-based config scoping and merging
+- Easy integration with Laravel models and enums via traits
+- Helper function `config_walker()` for quick access
+- Auto-load with Laravel's config system
 
-## PHP and Laravel Version Support
+## Requirements
 
-This package supports the following versions of PHP and Laravel:
+| Package  | Version     |
+|----------|-------------|
+| PHP      | ^8.4        |
+| Laravel  | ^12 \| ^13  |
 
-- PHP: `^8.2`
-- Laravel: `^11.0`, `^12.0`
+## Walkable Sources
 
+| Source Type | Trait / Interface | Description |
+|-------------|-------------------|-------------|
+| Eloquent Model | `ConfigWalkable` | Export model data via `walkable()` |
+| Backed Enum | `EnumConfigWalkable` | Auto-export enum values |
+| Custom Object | `Contracts\ConfigWalkerAware` | Implement `toWalker()` and `walkerKey()` |
+| Array | — | Pass arrays directly to `walk()` |
+| Laravel Config | — | Use `'default'` walker to load app config |
 
 ## Installation
-
-You can install the package via composer:
 
 ```bash
 composer require t-labs-co/config-walker
 ```
 
-You can publish the config file with:
+> **Upgrading from v1.x?** Read the [Migration Guide](https://github.com/T-Labs-Co/config-walker/blob/main/docs/MIGRATION_TO_V2.md) for a step-by-step upgrade path.
+
+Publish the config file:
 
 ```bash
 php artisan vendor:publish --tag="config-walker-config"
@@ -53,67 +52,47 @@ php artisan vendor:publish --tag="config-walker-config"
 
 ## Usage
 
-#### With Model 
+### With a Model
 
-Using Model trait `TLabsCo\ConfigWalker\ConfigWalkable` and custom your `walkable` method
+Use the `ConfigWalkable` trait on your model:
 
 ```php
-// Your Model App\Models\Category
+use TLabsCo\ConfigWalker\ConfigWalkable;
+
 class Category extends Model
 {
-    use HasFactory;
-    use ConfigWalkable;
+    use HasFactory, ConfigWalkable;
 
-    // omit the rest 
-
-    // Export book category to config 
     public function walkable(): array
     {
         return self::query()
-            ->whereStatus(CategoryStatus::Published)
-            ->whereType(CategoryType::Book)
-            ->get()
-            ->keyBy('slug')
-            ->map(function ($cat) {
-                return $cat->name;
-            })
+            ->pluck('name', 'slug')
             ->toArray();
     }
 
     public function walkerKey(): string
     {
-        return "category_" . CategoryType::Book->value;
+        return 'categories';
     }
 }
-
-// Using TLabsCo\ConfigWalker\Facades\ConfigWalker to walk your model 
-ConfigWalker::walk(Category::class);
-
-// Get the key config with Category
-ConfigWalker::get('category_book');
-
-// walk your config Category with Override key and under Tag
-ConfigWalker::walk(Category::class, 'book1', 'categories');
-
-// Combine your custom config under Tag
-ConfigWalker::walk(['fantasy' => 'Fantasy'], 'book1', 'categories');
-
-// Get config instance under tag categories
-$categoriesConfig = ConfigWalker::tag('categories');
-// Get custom config key
-$categoriesConfig->get('book1');
-// Get all
-$categoriesConfig->all();
-
 ```
 
-#### With Enum
-
-Using Enum trait `TLabsCo\ConfigWalker\EnumConfigWalkable` and custom your `walkable` method
+Then walk the model:
 
 ```php
+use TLabsCo\ConfigWalker\Facades\ConfigWalker;
 
-// Enum class
+ConfigWalker::walk(Category::class);
+ConfigWalker::get('categories');
+```
+
+### With an Enum
+
+Use the `EnumConfigWalkable` trait:
+
+```php
+use TLabsCo\ConfigWalker\EnumConfigWalkable;
+
 enum CategoryType: string
 {
     use EnumConfigWalkable;
@@ -121,60 +100,77 @@ enum CategoryType: string
     case Post = 'post';
     case Product = 'product';
     case Book = 'book';
-    case Page = 'page';
 }
-
-// Using TLabsCo\ConfigWalker\Facades\ConfigWalker to walk your Enum with TLabsCo\ConfigWalker\EnumConfigWalkable
-
-ConfigWalker::walk(CategoryType::class);
-
-// Get data from enum CategoryType, by default the key will be dashed case from enum name and without namespace
-// For here '\App\Enums\CategoryType' to 'category_type'
-ConfigWalker::get('category_type');
-
 ```
 
-#### Helper
+```php
+ConfigWalker::walk(CategoryType::class);
+ConfigWalker::get('category_type'); // key is auto-generated from enum name
+```
 
-Using helper function to access config walker - like Laravel built-in `config()`  
+### With ConfigWalkerAware
+
+Implement the `Contracts\ConfigWalkerAware` interface:
 
 ```php
+use TLabsCo\ConfigWalker\Contracts\ConfigWalkerAware;
 
-// Get Facade TLabsCo\ConfigWalker\Facades\ConfigWalker
-config_walker()
+class MyConfigSource implements ConfigWalkerAware
+{
+    public function toWalker(): array
+    {
+        return ['key' => 'value'];
+    }
 
-// Get config key 
+    public function walkerKey(): string
+    {
+        return 'my_source';
+    }
+}
+```
+
+### Tags
+
+Group configs under tags for scoped retrieval:
+
+```php
+ConfigWalker::walk(['a' => 1], null, 'group1');
+ConfigWalker::walk(['b' => 2], null, 'group2');
+
+// Get a single tag's config
+ConfigWalker::tag('group1')->get('a');
+
+// Merge multiple tags
+ConfigWalker::tags(['group1', 'group2']);
+
+// Flat merge
+ConfigWalker::tags(['group1', 'group2'], flat: true);
+```
+
+### Helper Function
+
+```php
+// Get the ConfigWalker instance
+config_walker();
+
+// Get a config value
 config_walker('your-key');
 
-// Set data when input array
+// Set config values
 config_walker(['your-key' => 'your-value']);
-
 ```
 
-#### Use to access Laravel config 
-
-This package provide serveral ways to load with Laravel config
+### Access Laravel Config
 
 ```php
-// Load on fly or from your boot ServiceProvider to auto load from init
+// Load Laravel's app config into ConfigWalker
 ConfigWalker::loadDefault();
 
-// Setting in config-walker.php option
-return [
-    'loadWithAppConfig' => true
-]
+// Or set in config/config-walker.php:
+// 'loadWithAppConfig' => true
 
-// Using default laravel config via ConfigWalker
-ConfigWalker::tag('default')->get('key');
-// Or 
-ConfigWalker::makeDefault()->get('key');
-
-// By default the Laravel will place under `default` group 
-// so to get key from config
-config('key')
-// equal to
-config_walker('default.key')
-
+// Access via ConfigWalker
+ConfigWalker::makeDefault()->get('app.name');
 ```
 
 ## Testing
@@ -187,9 +183,9 @@ composer test
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contributing
+## Upgrading from v1?
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+See the [Migration Guide](MIGRATION.md) for step-by-step upgrade instructions.
 
 ## Security Vulnerabilities
 
@@ -197,8 +193,14 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [T.](https://github.com/ty-huynh)
+- [Ty Huynh](https://github.com/ty-huynh)
 - [All Contributors](../../contributors)
+
+## Quality
+
+- **PHPStan Level 8** — strict static analysis
+- **Pest PHP** — comprehensive test suite
+- **Laravel Pint** — code style enforcement
 
 ## License
 

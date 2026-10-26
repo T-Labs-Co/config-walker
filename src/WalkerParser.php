@@ -1,50 +1,33 @@
 <?php
 
-/*
- * This file is a part of package t-co-labs/config-walker
- *
- * (c) T.Labs & Co.
- * Contact for Work: T. <hongty.huynh@gmail.com>
- *
- * We're PHP and Laravel whizzes, and we'd love to work with you! We can:
- *  - Design the perfect fit solution for your app.
- *  - Make your code cleaner and faster.
- *  - Refactoring and Optimize performance.
- *  - Ensure Laravel best practices are followed.
- *  - Provide expert Laravel support.
- *  - Review code and Quality Assurance.
- *  - Offer team and project leadership.
- *  - Delivery Manager
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace TLabsCo\ConfigWalker;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use TLabsCo\ConfigWalker\Contracts\ConfigWalkerAware as ConfigWalkerAwareContract;
 
-/**
- * Class WalkerParser
- */
 final class WalkerParser
 {
     /**
-     * @param  string|array|object  $walker
-     * @param  string|null  $key
+     * @param  mixed  $walker
+     * @return array<string, mixed>
      */
-    public function parse($walker, $key = null): array
+    public function parse($walker, ?string $key = null): array
     {
         if ($walker === 'default') {
             $append = Config::all();
         } elseif (is_array($walker)) {
             $append = $walker;
-        } elseif ($this->isUsingWalkableTrait($walker) || $this->isWalkerAware($walker)) {
+        } elseif (is_object($walker) && ($this->isUsingWalkableTrait($walker) || $this->isWalkerAware($walker))) {
+            $append = $this->parseWalkable($walker);
+            $key = $this->parseKey($key, $walker);
+        } elseif (is_string($walker) && class_exists($walker) && ($this->isUsingWalkableTrait($walker) || $this->isWalkerAware($walker))) {
             $append = $this->parseWalkable($walker);
             $key = $this->parseKey($key, $walker);
         } else {
-            $append = [$walker];
+            $append = is_object($walker) ? [] : [$walker];
         }
 
         if ($key) {
@@ -54,6 +37,10 @@ final class WalkerParser
         return $append;
     }
 
+    /**
+     * @param  string|object  $walker
+     * @return array<string, mixed>
+     */
     private function parseWalkable($walker): array
     {
         $obj = $this->makeClassInstance($walker);
@@ -66,11 +53,13 @@ final class WalkerParser
             return $obj->toWalker();
         }
 
-        // empty value
         return [];
     }
 
-    private function parseKey($key, $walker): string
+    /**
+     * @param  string|object  $walker
+     */
+    private function parseKey(?string $key, $walker): string
     {
         $obj = $this->makeClassInstance($walker);
 
@@ -89,10 +78,10 @@ final class WalkerParser
     {
         $obj = $this->makeClassInstance($class);
 
-        return $obj instanceof ConfigWalkerAware;
+        return $obj instanceof ConfigWalkerAwareContract;
     }
 
-    private function isUsingWalkableTrait($class): bool
+    private function isUsingWalkableTrait(string|object $class): bool
     {
         $obj = $this->makeClassInstance($class);
 
@@ -100,12 +89,13 @@ final class WalkerParser
             || in_array(EnumConfigWalkable::class, class_uses_recursive($obj));
     }
 
-    private function makeClassInstance($class): mixed
+    private function makeClassInstance(string|object $class): object
     {
         if (is_object($class)) {
             $class = get_class($class);
         }
 
+        // @phpstan-ignore argument.type
         return (new \ReflectionClass($class))->isEnum() ? $class::cases()[0] : new $class;
     }
 }

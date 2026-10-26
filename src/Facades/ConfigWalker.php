@@ -1,47 +1,29 @@
 <?php
 
-/*
- * This file is a part of package t-co-labs/config-walker
- *
- * (c) T.Labs & Co.
- * Contact for Work: T. <hongty.huynh@gmail.com>
- *
- * We're PHP and Laravel whizzes, and we'd love to work with you! We can:
- *  - Design the perfect fit solution for your app.
- *  - Make your code cleaner and faster.
- *  - Refactoring and Optimize performance.
- *  - Ensure Laravel best practices are followed.
- *  - Provide expert Laravel support.
- *  - Review code and Quality Assurance.
- *  - Offer team and project leadership.
- *  - Delivery Manager
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace TLabsCo\ConfigWalker\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static ConfigWalker walk($walker, $key = null, $tags = null)
- * @method static array all()
- * @method static mixed get($key, $default = null)
- * @method static array getArray($keys, $default = null)
- * @method static void set($key, $value = null)
- * @method static bool has($key)
- * @method static void forget($key)
- * @method static void prepend($key, $value)
- * @method static void push($key, $value)
- * @method static mixed pull($key, $default = null)
- * @method static ConfigWalker tag($tag)
- * @method static ConfigWalker tags($tags, $flat = false)
- * @method static ConfigWalker addTag($tag)
- * @method static ConfigWalker removeTag($tag, $includeConfig = true)
- * @method static bool hasTag($tag)
- * @method static array tagList()
- * @method static ConfigWalker loadDefault()
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker walk(mixed $walker, string|null $key = null, string|array<string>|null $tags = null)
+ * @method static array<string, mixed> all()
+ * @method static mixed get(string|array<string> $key, mixed $default = null)
+ * @method static array<string, mixed> getArray(array<string> $keys, mixed $default = null)
+ * @method static void set(string|array<string, mixed> $key, mixed $value = null)
+ * @method static bool has(mixed $key)
+ * @method static void forget(string $key)
+ * @method static void prepend(mixed $key, mixed $value)
+ * @method static void push(mixed $key, mixed $value)
+ * @method static mixed pull(string $key, mixed $default = null)
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker tag(string $tag)
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker tags(array<string> $tags, bool $flat = false)
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker addTag(string $tag)
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker removeTag(string $tag, bool $includeConfig = true)
+ * @method static bool hasTag(string $tag)
+ * @method static array<string, string> tagList()
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker loadDefault()
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker reset()
+ * @method static \TLabsCo\ConfigWalker\ConfigWalker makeDefault()
  *
  * @see \TLabsCo\ConfigWalker\ConfigWalker
  */
