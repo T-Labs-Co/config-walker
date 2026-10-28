@@ -1,82 +1,68 @@
 {
     "name": "t-labs-co/config-walker",
-    "version": "1.0.1",
-    "description": "The helper config package for Laravel applications. That centralizes different config sources",
+    "description": "A centralized configuration walker for Laravel — merge multiple config sources, tag-based scoping, and enum-aware config resolution.",
     "keywords": [
-        "T.Labs and Co.",
-        "T.Labs Co.",
+        "t-labs-co",
+        "ty-huynh",
         "laravel",
+        "config-walker",
         "configuration",
-        "config-walker"
+        "config-management"
     ],
-    "homepage": "https://github.com/t-labs-co/config-walker",
     "license": "MIT",
+    "type": "library",
     "authors": [
         {
-            "name": "T.",
+            "name": "Ty Huynh",
             "email": "hongty.huynh@gmail.com",
-            "role": "Any"
+            "homepage": "https://tyhuynh.id.vn",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.4||^8.3||^8.2",
-        "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0"
+        "php": "^8.4",
+        "illuminate/contracts": "^12|^13",
+        "illuminate/support": "^12|^13"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "nunomaduro/collision": "^8.1.1||^7.10.0||^6.0",
-        "larastan/larastan": "^2.9||^3.0",
-        "orchestra/testbench": "^10.0.0||^9.0.0||^8.22.0",
-        "phpunit/phpunit": "^11.0||^10.0||^9.6",
-        "pestphp/pest": "^3.0||^2.0",
-        "pestphp/pest-plugin-arch": "^3.0||^2.0",
-        "pestphp/pest-plugin-laravel": "^3.0||^2.0",
-        "phpstan/extension-installer": "^1.3||^2.0",
-        "phpstan/phpstan-deprecation-rules": "^1.1||^2.0",
-        "phpstan/phpstan-phpunit": "^1.3||^2.0",
-        "spatie/laravel-ray": "^1.35"
+        "larastan/larastan": "^3",
+        "laravel/pint": "^1",
+        "orchestra/testbench": "^10|^11",
+        "pestphp/pest": "^4|^5",
+        "pestphp/pest-plugin-arch": "^3|^4",
+        "pestphp/pest-plugin-laravel": "^4|^5"
     },
     "autoload": {
         "psr-4": {
-            "TLabsCo\\ConfigWalker\\": "src/",
-            "TLabsCo\\ConfigWalker\\Database\\Factories\\": "database/factories/"
+            "TLabsCo\\ConfigWalker\\": "src/"
         },
         "files": [
-            "src/helpers.php"
+            "src/Support/functions.php"
         ]
     },
     "autoload-dev": {
         "psr-4": {
-            "TLabsCo\\ConfigWalker\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/"
+            "TLabsCo\\ConfigWalker\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "post-autoload-dump": "@composer run prepare",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
+        "test": "vendor/bin/pest --parallel",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
         "format": "vendor/bin/pint"
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "TLabsCo\\ConfigWalker\\ConfigWalkerServiceProvider"
-            ],
-            "aliases": {
-                "ConfigWalker": "TLabsCo\\ConfigWalker\\Facades\\ConfigWalker"
-            }
+                "TLabsCo\\ConfigWalker\\Providers\\ConfigWalkerServiceProvider"
+            ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
